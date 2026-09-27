@@ -72,7 +72,7 @@
     <div id="controls-info"><strong>【操作方法】</strong><br>上司(👹)の視界の中にあなたの席(🖥️)が入ると不審度が上昇します。<br>上司の視界にいる間、<span class="key">スペースキー</span> または <span class="key">画面長押し</span> で「仕事やってるフリ（タイピング）」をしてください。<br>※長押ししている間は<strong>体力と気力</strong>が減り、0になると疲労困憊で動けなくなります！</div>
 
     <script>
-        let gameActive = false, score = 0, suspicion = 0, stamina = 100, willpower = 100, isHolding = false, isExhausted = false, exhaustedTimer = 0, currentTaskProgress = 0, currentTaskName = "";
+        let gameActive = false, isGameOver = false, score = 0, suspicion = 0, stamina = 100, willpower = 100, isHolding = false, isExhausted = false, exhaustedTimer = 0, currentTaskProgress = 0, currentTaskName = "";
         const boss = { x: 30, y: 30, targetX: 30, targetY: 30, speed: 1.5 };
         const playerPos = { x: 270, y: 330 }, deskPos = { x: 270, y: 270 };
         const aiTasks = ["コアビジネス戦略の自動AI生成...", "顧客データベースのサイレント同期...", "社内日報のAIディープフェイク自動提出...", "売上予測の超高速でっち上げ中...", "無駄な会議資料の全自動スライド生成...", "AIによる競合他社の自動ディスブランディング..."];
@@ -99,7 +99,7 @@
         }
         
         function startGame() { 
-            score = 0; suspicion = 0; stamina = 100; willpower = 100; isHolding = false; isExhausted = false; exhaustedTimer = 0;
+            score = 0; suspicion = 0; stamina = 100; willpower = 100; isHolding = false; isExhausted = false; exhaustedTimer = 0; isGameOver = false;
             boss.x = 30; boss.y = 30; gameActive = true; elOverlay.style.display = 'none'; nextTask(); 
             addLog("給料泥棒セッションが開始されました。"); 
             requestAnimationFrame(gameLoop); 
@@ -107,21 +107,28 @@
         
         function gameOver() { 
             gameActive = false; 
+            isGameOver = true;
             elOverlay.style.display = 'flex'; 
             elOverlayTitle.innerText = "🚨 クビになりました 🚨"; 
-            elOverlayDesc.innerHTML = `あなたは上司にサボりを見破られました。<br><strong>生涯泥棒獲得賃金: ¥${score.toLocaleString()}</strong>`; 
+            elOverlayDesc.innerHTML = `あなたは上司にサボりを見破られました。<br><strong>生涯泥棒獲得賃金: ¥${score.toLocaleString()}</strong><br><span style="font-size: 17px; color: #aaa; margin-top: 10px; display: inline-block;">(Enterキーで再スタート)</span>`; 
             elStartBtn.innerText = "もう一度出勤する"; 
         }
         
-        // スペースキーによる長押し操作（スクロール防止対応）
+        // スタート画面およびゲームオーバー時を含め、スペースキーでのスクロールを防止
         window.addEventListener('keydown', (e) => { 
             if(e.code === 'Space') {
-                if(gameActive) {
-                    e.preventDefault(); // 画面スクロールを防ぐ
-                    if(!e.repeat) isHolding = true; 
+                e.preventDefault(); // 画面スクロールを防ぐ
+                if(gameActive && !e.repeat) {
+                    isHolding = true; 
                 }
             }
+            // ゲームオーバー時にエンターキーで再スタート
+            if(e.code === 'Enter' && isGameOver) {
+                e.preventDefault();
+                startGame();
+            }
         });
+
         window.addEventListener('keyup', (e) => { 
             if(e.code === 'Space') { 
                 e.preventDefault();
