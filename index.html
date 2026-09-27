@@ -36,7 +36,7 @@
 </head>
 <body>
     <h1>AI時代の給料泥棒シミュレーター</h1>
-    <div class="description">あなたは最強のAIを裏で動かす天才（泥棒）。自分は何もしなくても画面上のタスクはAIが全自動処理！<br>ただし、上司（👹）の視界に引っかかると不審度が上昇します。上司の視界にいる時は**エンターキー長押し**または**画面長押し**をして「必死にやってるフリ」をしろ！ただし、長押ししすぎると体力と気力が切れて疲労困憊になります。</div>
+    <div class="description">あなたは最強のAIを裏で動かす天才（泥棒）。自分は何もしなくても画面上のタスクはAIが全自動処理！<br>ただし、上司（👹）の視界に引っかかると不審度が上昇します。上司の視界にいる時は**スペースキー長押し**または**画面長押し**をして「必死にやってるフリ」をしろ！ただし、長押ししすぎると体力と気力が切れて疲労困憊になります。</div>
     
     <div style="position: relative;">
         <div id="game-container">
@@ -47,13 +47,11 @@
                 <div class="boss-sight" id="sight"></div>
             </div>
             <div id="side-panel">
-                <!-- AI自動処理タスク（ゲージ削除版） -->
                 <div class="status-box">
                     <div class="status-title">AI全自動処理タスク</div>
                     <div id="task-name" style="font-weight: bold; font-size: 18px;">準備中...</div>
                 </div>
                 
-                <!-- 上司の不審度ゲージ（2番めに配置） -->
                 <div class="status-box" style="border-left-color: var(--alert-color);">
                     <div class="status-title">上司の不審度 (MAXでクビ)</div>
                     <div id="suspicion-text" class="status-value">0%</div>
@@ -71,7 +69,7 @@
         <div id="overlay"><h2 id="overlay-title" style="font-size:36px;">給料泥棒、業務開始</h2><p id="overlay-desc" style="font-size:21px;">黙って座っているだけで、AIが毎秒お金を稼ぎます。</p><button id="start-btn">出勤する</button></div>
     </div>
     
-    <div id="controls-info"><strong>【操作方法】</strong><br>上司(👹)の視界の中にあなたの席(🖥️)が入ると不審度が上昇します。<br>上司の視界にいる間、<span class="key">エンターキー (Enter)</span> または <span class="key">画面長押し</span> で「仕事やってるフリ（タイピング）」をしてください。<br>※長押ししている間は<strong>体力と気力</strong>が減り、0になると疲労困憊で動けなくなります！</div>
+    <div id="controls-info"><strong>【操作方法】</strong><br>上司(👹)の視界の中にあなたの席(🖥️)が入ると不審度が上昇します。<br>上司の視界にいる間、<span class="key">スペースキー</span> または <span class="key">画面長押し</span> で「仕事やってるフリ（タイピング）」をしてください。<br>※長押ししている間は<strong>体力と気力</strong>が減り、0になると疲労困憊で動けなくなります！</div>
 
     <script>
         let gameActive = false, score = 0, suspicion = 0, stamina = 100, willpower = 100, isHolding = false, isExhausted = false, exhaustedTimer = 0, currentTaskProgress = 0, currentTaskName = "";
@@ -81,7 +79,6 @@
         
         const elBoss = document.getElementById('boss'), elSight = document.getElementById('sight'), elPlayer = document.getElementById('player'), elTaskName = document.getElementById('task-name'), elSuspicionBar = document.getElementById('suspicion-bar'), elSuspicionText = document.getElementById('suspicion-text'), elStaminaBar = document.getElementById('stamina-bar'), elStaminaText = document.getElementById('stamina-text'), elWillBar = document.getElementById('will-bar'), elWillText = document.getElementById('will-text'), elScore = document.getElementById('score'), elPcScreen = document.getElementById('pc-screen'), elOverlay = document.getElementById('overlay'), elOverlayTitle = document.getElementById('overlay-title'), elOverlayDesc = document.getElementById('overlay-desc'), elStartBtn = document.getElementById('start-btn'), floor = document.getElementById('office-floor');
         
-        // グリッド線
         for(let i=60; i<600; i+=60) { 
             let hLine = document.createElement('div'); hLine.className = 'grid-line'; hLine.style.width = '100%'; hLine.style.height = '1px'; hLine.style.top = i+'px'; floor.appendChild(hLine); 
             let vLine = document.createElement('div'); vLine.className = 'grid-line'; vLine.style.width = '1px'; vLine.style.height = '100%'; vLine.style.left = i+'px'; floor.appendChild(vLine); 
@@ -116,15 +113,18 @@
             elStartBtn.innerText = "もう一度出勤する"; 
         }
         
-        // エンターキーによる長押し操作の管理
+        // スペースキーによる長押し操作（スクロール防止対応）
         window.addEventListener('keydown', (e) => { 
-            if(e.code === 'Enter' && gameActive && !e.repeat) { 
-                e.preventDefault(); 
-                isHolding = true; 
-            } 
+            if(e.code === 'Space') {
+                if(gameActive) {
+                    e.preventDefault(); // 画面スクロールを防ぐ
+                    if(!e.repeat) isHolding = true; 
+                }
+            }
         });
         window.addEventListener('keyup', (e) => { 
-            if(e.code === 'Enter') { 
+            if(e.code === 'Space') { 
+                e.preventDefault();
                 isHolding = false; 
             } 
         });
