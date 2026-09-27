@@ -16,7 +16,7 @@
         #player { z-index: 10; left: 270px; top: 330px; }
         #desk { position: absolute; left: 270px; top: 270px; z-index: 5; }
         #boss { z-index: 15; left: 30px; top: 30px; }
-        .boss-sight { position: absolute; width: 240px; height: 240px; background: rgba(255, 87, 34, 0.2); border-radius: 50%; transform: translate(-90px, -90px); pointer-events: none; display: none; z-index: 8; }
+        .boss-sight { position: absolute; width: 240px; height: 240px; background: rgba(255, 87, 34, 0.2); border-radius: 50%; transform: translate(-90px, -90px); pointer-events: none; display: block; z-index: 8; } /* 常に表示 */
         #side-panel { width: 450px; display: flex; flex-direction: column; gap: 15px; }
         .status-box { background: rgba(0,0,0,0.2); padding: 14px 18px; border-radius: 12px; border-left: 6px solid var(--accent-color); }
         .status-title { font-size: 16px; color: #888; text-transform: uppercase; margin-bottom: 4px; }
@@ -47,14 +47,23 @@
                 <div class="boss-sight" id="sight"></div>
             </div>
             <div id="side-panel">
-                <div class="status-box"><div class="status-title">AI全自動処理タスク</div><div id="task-name" style="font-weight: bold; font-size: 18px;">準備中...</div><div class="progress-bar-container"><div id="task-progress" class="progress-bar"></div></div></div>
+                <!-- AI自動処理タスク（ゲージ削除版） -->
+                <div class="status-box">
+                    <div class="status-title">AI全自動処理タスク</div>
+                    <div id="task-name" style="font-weight: bold; font-size: 18px;">準備中...</div>
+                </div>
                 
+                <!-- 上司の不審度ゲージ（2番めに配置） -->
+                <div class="status-box" style="border-left-color: var(--alert-color);">
+                    <div class="status-title">上司の不審度 (MAXでクビ)</div>
+                    <div id="suspicion-text" class="status-value">0%</div>
+                    <div class="progress-bar-container"><div id="suspicion-bar" class="progress-bar"></div></div>
+                </div>
+
                 <div class="status-box" style="border-left-color: var(--stamina-color);"><div class="status-title">体力</div><div id="stamina-text" class="status-value">100%</div><div class="progress-bar-container"><div id="stamina-bar" class="progress-bar" style="background: var(--stamina-color); width: 100%;"></div></div></div>
                 
                 <div class="status-box" style="border-left-color: var(--will-color);"><div class="status-title">気力</div><div id="will-text" class="status-value">100%</div><div class="progress-bar-container"><div id="will-bar" class="progress-bar" style="background: var(--will-color); width: 100%;"></div></div></div>
 
-                <div class="status-box" style="border-left-color: var(--alert-color);"><div class="status-title">上司の不審度 (MAXでクビ)</div><div id="suspicion-text" class="status-value">0%</div><div class="progress-bar-container"><div id="suspicion-bar" class="progress-bar"></div></div></div>
-                
                 <div class="status-box" style="border-left-color: #ffeb3b;"><div class="status-title">稼いだ給料 (スコア)</div><div id="score" class="status-value">¥0</div></div>
                 <div id="pc-screen"><div>[AI-System-Ready]</div><div>自動最適化マクロ起動中...</div></div>
             </div>
@@ -62,15 +71,15 @@
         <div id="overlay"><h2 id="overlay-title" style="font-size:36px;">給料泥棒、業務開始</h2><p id="overlay-desc" style="font-size:21px;">黙って座っているだけで、AIが毎秒お金を稼ぎます。</p><button id="start-btn">出勤する</button></div>
     </div>
     
-    <div id="controls-info"><strong>【操作方法】</strong><br>上司(👹)があなたの席(🖥️)に近づくと不審度が上昇します。<br>上司が近くにいる間、<span class="key">スペースキー</span> または <span class="key">画面長押し</span> で「仕事やってるフリ（タイピング）」をしてください。<br>※長押ししている間は<strong>体力と気力</strong>が減り、0になると疲労困憊で動けなくなります！（疲労時間は通常より長めです）</div>
+    <div id="controls-info"><strong>【操作方法】</strong><br>上司(👹)の視界の中にあなたの席(🖥️)が入ると不審度が上昇します。<br>上司が近くにいる間、<span class="key">スペースキー</span> または <span class="key">画面長押し</span> で「仕事やってるフリ（タイピング）」をしてください。<br>※長押ししている間は<strong>体力と気力</strong>が減り、0になると疲労困憊で動けなくなります！</div>
 
     <script>
         let gameActive = false, score = 0, suspicion = 0, stamina = 100, willpower = 100, isHolding = false, isExhausted = false, exhaustedTimer = 0, currentTaskProgress = 0, currentTaskName = "";
-        const boss = { x: 30, y: 30, targetX: 30, targetY: 30, speed: 1.5 }; // 速度半分 (3 -> 1.5)
+        const boss = { x: 30, y: 30, targetX: 30, targetY: 30, speed: 1.5 }; // 速度半分
         const playerPos = { x: 270, y: 330 }, deskPos = { x: 270, y: 270 };
         const aiTasks = ["コアビジネス戦略の自動AI生成...", "顧客データベースのサイレント同期...", "社内日報のAIディープフェイク自動提出...", "売上予測の超高速でっち上げ中...", "無駄な会議資料の全自動スライド生成...", "AIによる競合他社の自動ディスブランディング..."];
         
-        const elBoss = document.getElementById('boss'), elSight = document.getElementById('sight'), elPlayer = document.getElementById('player'), elTaskName = document.getElementById('task-name'), elTaskProgress = document.getElementById('task-progress'), elSuspicionBar = document.getElementById('suspicion-bar'), elSuspicionText = document.getElementById('suspicion-text'), elStaminaBar = document.getElementById('stamina-bar'), elStaminaText = document.getElementById('stamina-text'), elWillBar = document.getElementById('will-bar'), elWillText = document.getElementById('will-text'), elScore = document.getElementById('score'), elPcScreen = document.getElementById('pc-screen'), elOverlay = document.getElementById('overlay'), elOverlayTitle = document.getElementById('overlay-title'), elOverlayDesc = document.getElementById('overlay-desc'), elStartBtn = document.getElementById('start-btn'), floor = document.getElementById('office-floor');
+        const elBoss = document.getElementById('boss'), elSight = document.getElementById('sight'), elPlayer = document.getElementById('player'), elTaskName = document.getElementById('task-name'), elSuspicionBar = document.getElementById('suspicion-bar'), elSuspicionText = document.getElementById('suspicion-text'), elStaminaBar = document.getElementById('stamina-bar'), elStaminaText = document.getElementById('stamina-text'), elWillBar = document.getElementById('will-bar'), elWillText = document.getElementById('will-text'), elScore = document.getElementById('score'), elPcScreen = document.getElementById('pc-screen'), elOverlay = document.getElementById('overlay'), elOverlayTitle = document.getElementById('overlay-title'), elOverlayDesc = document.getElementById('overlay-desc'), elStartBtn = document.getElementById('start-btn'), floor = document.getElementById('office-floor');
         
         // グリッド線
         for(let i=60; i<600; i+=60) { 
@@ -140,7 +149,7 @@
             elBoss.style.left = boss.x + 'px'; 
             elBoss.style.top = boss.y + 'px'; 
             
-            // 上司の視界円の同期
+            // 上司の視界円の常時同期
             elSight.style.left = (boss.x + 30) + 'px';
             elSight.style.top = (boss.y + 30) + 'px';
         }
@@ -150,16 +159,14 @@
             
             updateBoss(); 
             
-            // 速度半分（0.5倍速）に合わせたタスク進行・ゲージ増減
+            // タスク進行（ゲージは非表示になったが内部で進行）
             currentTaskProgress += 0.4; 
             if(currentTaskProgress >= 100) { 
-                // 賃金を100分の1に調整 (100〜250円相当)
-                score += Math.floor(Math.random() * 150) + 100; 
+                score += Math.floor(Math.random() * 150) + 100; // 100分の1の賃金
                 elScore.innerText = `¥${score.toLocaleString()}`; 
                 addLog("【完了】AIが成果物を勝手に提出しました。給与発生！"); 
                 nextTask(); 
             } 
-            elTaskProgress.style.width = currentTaskProgress + '%'; 
             
             // 疲労困憊状態の処理
             if (isExhausted) {
@@ -170,7 +177,6 @@
                     isExhausted = false;
                 }
             } else {
-                // 長押し中の処理
                 if (isHolding && stamina > 0 && willpower > 0) {
                     stamina = Math.max(stamina - 0.35, 0);
                     willpower = Math.max(willpower - 0.4, 0);
@@ -181,12 +187,11 @@
                     }
                     if (stamina === 0 || willpower === 0) {
                         isExhausted = true;
-                        exhaustedTimer = 240; // 疲労困憊の時間を2倍に延長
+                        exhaustedTimer = 240; // 疲労困憊時間を2倍に延長
                         addLog("【警告】体力と気力が限界を迎え、疲労困憊で動けなくなりました！");
                     }
                 } else {
                     elPlayer.innerText = "🧑‍💻";
-                    // サボり中（または非長押し時）は少しずつ回復
                     stamina = Math.min(stamina + 0.2, 100);
                     willpower = Math.min(willpower + 0.25, 100);
                 }
@@ -200,14 +205,12 @@
             // 不審度の計算
             const distToPlayer = Math.hypot(boss.x - playerPos.x, boss.y - playerPos.y); 
             if (distToPlayer < 135) { 
-                elSight.style.display = 'block'; 
                 if (isHolding && !isExhausted) { 
-                    suspicion = Math.max(suspicion - 0.1, 0); // フリをしていると不審度ダウン
+                    suspicion = Math.max(suspicion - 0.1, 0); 
                 } else { 
-                    suspicion += 0.75; // サボっている or 動けないと不審度アップ
+                    suspicion += 0.75; 
                 } 
             } else { 
-                elSight.style.display = 'none'; 
                 suspicion = Math.max(suspicion - 0.05, 0); 
             } 
             
