@@ -16,7 +16,7 @@
         #player { z-index: 10; left: 270px; top: 330px; }
         #desk { position: absolute; left: 270px; top: 270px; z-index: 5; }
         #boss { z-index: 15; left: 30px; top: 30px; }
-        .boss-sight { position: absolute; width: 240px; height: 240px; background: rgba(255, 87, 34, 0.2); border-radius: 50%; transform: translate(-90px, -90px); pointer-events: none; display: block; z-index: 8; } /* 常に表示 */
+        .boss-sight { position: absolute; width: 240px; height: 240px; background: rgba(255, 87, 34, 0.2); border-radius: 50%; transform: translate(-90px, -90px); pointer-events: none; display: block; z-index: 8; }
         #side-panel { width: 450px; display: flex; flex-direction: column; gap: 15px; }
         .status-box { background: rgba(0,0,0,0.2); padding: 14px 18px; border-radius: 12px; border-left: 6px solid var(--accent-color); }
         .status-title { font-size: 16px; color: #888; text-transform: uppercase; margin-bottom: 4px; }
@@ -36,7 +36,7 @@
 </head>
 <body>
     <h1>AI時代の給料泥棒シミュレーター</h1>
-    <div class="description">あなたは最強のAIを裏で動かす天才（泥棒）。自分は何もしなくても画面上のタスクはAIが全自動処理！<br>ただし、時々見回りに来る**上司（👹）**にサボっているのがバレるとクビになります。上司が近くにいる時は**スペースキー長押し**または**画面長押し**をして「必死にやってるフリ」をしろ！ただし、長押ししすぎると体力と気力が切れて疲労困憊になります。</div>
+    <div class="description">あなたは最強のAIを裏で動かす天才（泥棒）。自分は何もしなくても画面上のタスクはAIが全自動処理！<br>ただし、上司（👹）の視界に引っかかると不審度が上昇します。上司の視界にいる時は**エンターキー長押し**または**画面長押し**をして「必死にやってるフリ」をしろ！ただし、長押ししすぎると体力と気力が切れて疲労困憊になります。</div>
     
     <div style="position: relative;">
         <div id="game-container">
@@ -71,11 +71,11 @@
         <div id="overlay"><h2 id="overlay-title" style="font-size:36px;">給料泥棒、業務開始</h2><p id="overlay-desc" style="font-size:21px;">黙って座っているだけで、AIが毎秒お金を稼ぎます。</p><button id="start-btn">出勤する</button></div>
     </div>
     
-    <div id="controls-info"><strong>【操作方法】</strong><br>上司(👹)の視界の中にあなたの席(🖥️)が入ると不審度が上昇します。<br>上司が近くにいる間、<span class="key">スペースキー</span> または <span class="key">画面長押し</span> で「仕事やってるフリ（タイピング）」をしてください。<br>※長押ししている間は<strong>体力と気力</strong>が減り、0になると疲労困憊で動けなくなります！</div>
+    <div id="controls-info"><strong>【操作方法】</strong><br>上司(👹)の視界の中にあなたの席(🖥️)が入ると不審度が上昇します。<br>上司の視界にいる間、<span class="key">エンターキー (Enter)</span> または <span class="key">画面長押し</span> で「仕事やってるフリ（タイピング）」をしてください。<br>※長押ししている間は<strong>体力と気力</strong>が減り、0になると疲労困憊で動けなくなります！</div>
 
     <script>
         let gameActive = false, score = 0, suspicion = 0, stamina = 100, willpower = 100, isHolding = false, isExhausted = false, exhaustedTimer = 0, currentTaskProgress = 0, currentTaskName = "";
-        const boss = { x: 30, y: 30, targetX: 30, targetY: 30, speed: 1.5 }; // 速度半分
+        const boss = { x: 30, y: 30, targetX: 30, targetY: 30, speed: 1.5 };
         const playerPos = { x: 270, y: 330 }, deskPos = { x: 270, y: 270 };
         const aiTasks = ["コアビジネス戦略の自動AI生成...", "顧客データベースのサイレント同期...", "社内日報のAIディープフェイク自動提出...", "売上予測の超高速でっち上げ中...", "無駄な会議資料の全自動スライド生成...", "AIによる競合他社の自動ディスブランディング..."];
         
@@ -116,15 +116,15 @@
             elStartBtn.innerText = "もう一度出勤する"; 
         }
         
-        // 長押し・キー入力の管理
+        // エンターキーによる長押し操作の管理
         window.addEventListener('keydown', (e) => { 
-            if(e.code === 'Space' && gameActive && !e.repeat) { 
+            if(e.code === 'Enter' && gameActive && !e.repeat) { 
                 e.preventDefault(); 
                 isHolding = true; 
             } 
         });
         window.addEventListener('keyup', (e) => { 
-            if(e.code === 'Space') { 
+            if(e.code === 'Enter') { 
                 isHolding = false; 
             } 
         });
@@ -149,7 +149,6 @@
             elBoss.style.left = boss.x + 'px'; 
             elBoss.style.top = boss.y + 'px'; 
             
-            // 上司の視界円の常時同期
             elSight.style.left = (boss.x + 30) + 'px';
             elSight.style.top = (boss.y + 30) + 'px';
         }
@@ -159,16 +158,14 @@
             
             updateBoss(); 
             
-            // タスク進行（ゲージは非表示になったが内部で進行）
             currentTaskProgress += 0.4; 
             if(currentTaskProgress >= 100) { 
-                score += Math.floor(Math.random() * 150) + 100; // 100分の1の賃金
+                score += Math.floor(Math.random() * 150) + 100; 
                 elScore.innerText = `¥${score.toLocaleString()}`; 
                 addLog("【完了】AIが成果物を勝手に提出しました。給与発生！"); 
                 nextTask(); 
             } 
             
-            // 疲労困憊状態の処理
             if (isExhausted) {
                 exhaustedTimer -= 0.5;
                 elPlayer.innerText = "😵‍💫";
@@ -187,7 +184,7 @@
                     }
                     if (stamina === 0 || willpower === 0) {
                         isExhausted = true;
-                        exhaustedTimer = 240; // 疲労困憊時間を2倍に延長
+                        exhaustedTimer = 240; 
                         addLog("【警告】体力と気力が限界を迎え、疲労困憊で動けなくなりました！");
                     }
                 } else {
@@ -202,7 +199,6 @@
             elWillBar.style.width = willpower + '%';
             elWillText.innerText = Math.floor(willpower) + '%';
 
-            // 不審度の計算
             const distToPlayer = Math.hypot(boss.x - playerPos.x, boss.y - playerPos.y); 
             if (distToPlayer < 135) { 
                 if (isHolding && !isExhausted) { 
